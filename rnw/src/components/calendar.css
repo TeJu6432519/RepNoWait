@@ -1,0 +1,853 @@
+.calendar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .calendar-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .calendar-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+  }
+  
+  .calendar-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+  }
+  
+  /* Calendar Header */
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+  }
+  
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #00d4ff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-btn:hover {
+    background: rgba(0, 212, 255, 0.15);
+    transform: scale(1.05);
+    border-color: #00d4ff;
+  }
+  
+  .month-year {
+    font-size: 1.5rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Weekday Labels */
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .weekday-label {
+    text-align: center;
+    font-weight: 600;
+    color: #00d4ff;
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+  }
+  
+  /* Calendar Grid */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+  }
+  
+  .calendar-day:not(.empty):hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.08);
+    border-color: rgba(0, 212, 255, 0.5);
+  }
+  
+  .calendar-day.empty {
+    cursor: default;
+    background: transparent;
+    border: none;
+  }
+  
+  .calendar-day.today {
+    background: linear-gradient(135deg, #ff6b6b, #ffa500);
+    border: none;
+    font-weight: 700;
+    color: #ffffff;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+  }
+  
+  .calendar-day.today:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+  }
+  
+  .calendar-day.has-workout {
+    background: rgba(78, 205, 196, 0.25);
+    border: 2px solid #4ecdc4;
+    color: #4ecdc4;
+  }
+  
+  .calendar-day.has-workout::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ecdc4;
+    bottom: 6px;
+  }
+  
+  .calendar-day.has-workout.today::after {
+    background: #ffffff;
+  }
+  
+  /* Legend */
+  .calendar-legend {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+  }
+  
+  .today-dot {
+    background: linear-gradient(135deg, #ff6b6b, #ffa500);
+  }
+  
+  .workout-dot {
+    background: #4ecdc4;
+    border: 2px solid rgba(78, 205, 196, 0.5);
+  }
+  
+  /* Workout Summary */
+  .workout-summary {
+    margin-bottom: 2rem;
+  }
+  
+  .workout-summary h3 {
+    font-size: 1.1rem;
+    color: #00d4ff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .workout-days-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .workout-badge {
+    background: rgba(78, 205, 196, 0.2);
+    border: 1px solid #4ecdc4;
+    color: #4ecdc4;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .workout-badge:hover {
+    background: rgba(78, 205, 196, 0.35);
+    transform: translateY(-2px);
+  }
+  
+  .no-workouts {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    font-size: 0.9rem;
+  }
+  
+  /* Statistics */
+  .calendar-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .stat-box {
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-box:hover {
+    background: rgba(0, 212, 255, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 212, 255, 0.1);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #00d4ff;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .calendar-card {
+      padding: 1.5rem;
+    }
+  
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+      }
+      
+      .header-left,
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .calendar-nav-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px; /* same as calendar-day */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: #00d4ff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+      
+      .calendar-nav-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.08);
+        border-color: rgba(0, 212, 255, 0.5);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+      }
+      
+      .curr-btn {
+        padding: 0.3rem 0.8rem;
+        border-radius: 12px; /* same as calendar-day */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 212, 255, 0.03);
+        color: #00d4ff;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      
+      .home-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.08);
+        border-color: rgba(0, 212, 255, 0.5);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+      }
+      
+  
+    .month-year {
+      font-size: 1.2rem;
+    }
+  
+    .calendar-grid {
+      gap: 0.5rem;
+    }
+  
+    .calendar-legend {
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  
+    .calendar-stats {
+      grid-template-columns: 1fr;
+    }
+  
+    .calendar-day {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .calendar-card {
+      padding: 1rem;
+    }
+  
+    .month-year {
+      font-size: 1rem;
+    }
+  
+    .calendar-day {
+      border-radius: 8px;
+      font-size: 0.75rem;
+    }
+  
+    .weekday-label {
+      font-size: 0.75rem;
+    }
+  }
+/* ===============================
+   Hover Tooltip for Workout Days (Right Side Floating)
+   =============================== */
+   .day-tooltip {
+    position: absolute;
+    top: 50%;
+    left: 105%; /* Move to right of the cell */
+    transform: translateY(-50%) scale(0.95);
+    background: rgba(9, 10, 10, 0.795);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    backdrop-filter: blur(30px);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-size: 0.8rem;
+    width: 180px;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.25);
+    z-index: 20;
+  }
+  
+  .day-tooltip h4 {
+    color: #00d4ff;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    padding-bottom: 0.25rem;
+  }
+  
+  .day-tooltip ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .day-tooltip li {
+    margin: 0.25rem 0;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  
+  /* Show tooltip on hover */
+  .calendar-day.has-workout:hover .day-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+    pointer-events: auto;
+  }
+  
+  /* Tooltip pointer on LEFT edge (pointing toward day box) */
+  .calendar-day.has-workout:hover .day-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent rgba(0, 212, 255, 0.5) transparent transparent;
+    filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+  }
+
+
+  /* ======================================
+   Dark Overlay on Hover (Right-Side Tooltip Focus)
+   ====================================== */
+.calendar-container {
+    position: relative; /* Important: make overlay relative to calendar */
+  }
+  
+  .calendar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 5;
+  }
+  
+  /* Activate overlay when hovering any workout day */
+  .calendar-day.has-workout:hover ~ .calendar-overlay {
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  /* Bring tooltip and hovered day above overlay */
+  .calendar-day.has-workout:hover,
+  .calendar-day.has-workout:hover .day-tooltip {
+    z-index: 10;
+  }
+  
+  /* Optional: subtle glow on hovered day */
+  .calendar-day.has-workout:hover {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+    transform: scale(1.08);
+  }
+
+  .calendar-day.has-workout:hover ~ .calendar-overlay {
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .inline-workout-details {
+    grid-column: 1 / -1; /* full width below calendar day */
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 0 1rem 0;
+    color: #fff;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 25px rgba(0, 212, 255, 0.2);
+    animation: fadeIn 0.3s ease forwards;
+    font-size: 0.9rem;
+  }
+  
+  .inline-workout-details h4 {
+    color: #00d4ff;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  .inline-workout-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .inline-workout-details li {
+    margin: 0.3rem 0;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  
+  .home-btn {
+    margin-left: 1rem;
+    padding: 0.3rem 0.8rem;
+    background-color: rgba(0, 212, 255, 0.3);
+    border-radius: 12px; /* same as calendar-day for consistency */
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* same as calendar-day default */
+  }
+  
+  .home-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+    transform: scale(1.08);
+    border-color: rgba(0, 212, 255, 0.5); /* explicit, prevents weird purple */
+  }
+  
+  .planner-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+  }
+  
+  .planner-modal {
+    background: #1e1e2f;
+    padding: 1.5rem;
+    border-radius: 12px;
+    width: 350px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    position: relative;
+  }
+  
+  .planner-modal input, select {
+    background: #2a2a3d;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    color: white;
+  }
+  
+  .exercise-inputs {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .exercise-list {
+    background: #2a2a3d;
+    padding: 0.5rem;
+    border-radius: 8px;
+    list-style: none;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  
+  .exercise-list li {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+  }
+  
+  .save-btn {
+    background: #00c6ff;
+    border: none;
+    padding: 0.6rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: none; border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .day-tag {
+    font-size: 10px;
+    background: #00c6ff;
+    color: white;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin-top: 4px;
+  }
+  
+  .weekly-planner {
+    background: #1a1a2e;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    color: white;
+  }
+  
+  .weekday-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .weekday-option input {
+    margin-right: 4px;
+  }
+  
+  .muscle-group-picker {
+    margin-top: 0.8rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .muscle-group-picker select {
+    background: #2a2a3d;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+  }
+  
+  .apply-btn {
+    background: #00c6ff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .inline-editor {
+    background: #23233b;
+    margin-top: 0.5rem;
+    border-radius: 8px;
+    padding: 0.6rem;
+    color: white;
+  }
+  
+  .inline-input {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+  
+  .inline-input input {
+    background: #2a2a3d;
+    border: none;
+    color: white;
+    padding: 0.3rem;
+    border-radius: 6px;
+    width: 70px;
+  }
+  
+  .delete-ex {
+    background: none;
+    border: none;
+    color: #ff5555;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+  
+  .no-exercises {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+  
+  .weekly-planner {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .weekly-planner h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #00c6ff;
+  }
+  
+  .weekday-select {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  
+  .weekday-select label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+  }
+  
+  .weekly-muscle {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .apply-week-btn {
+    background: #00c6ff;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .apply-week-btn:hover {
+    background: #009be3;
+  }
+  
+  .inline-workout-details {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    margin: 8px 0;
+    padding: 10px;
+  }
+  
+  .inline-workout-details input {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 3px 6px;
+    margin-right: 5px;
+    border-radius: 4px;
+  }
+  
+  .inline-workout-details button {
+    background: #00c6ff;
+    border: none;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+.inline-workout-details button:hover {
+  background: #009be3;
+}
+
+/* Overlay background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Editor box inside overlay */
+.inline-workout-details {
+  background: #1e1e2f;
+  border-radius: 12px;
+  padding: 24px;
+  width: 380px;
+  color: #fff;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+  animation: popIn 0.2s ease-out;
+}
+
+.inline-workout-details h4 {
+  margin-bottom: 12px;
+  text-align: center;
+  color: #00b4d8;
+}
+
+.inline-workout-details ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.inline-workout-details li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.inline-workout-details input {
+  background: #2a2a3d;
+  border: 1px solid #3d3d5c;
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+.inline-workout-details button {
+  background: #00b4d8;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.inline-workout-details button:hover {
+  background: #009be3;
+}
+
+/* Close button styling */
+.close-overlay-btn {
+  background: #ff4757;
+  margin-top: 10px;
+}
+
+.close-overlay-btn:hover {
+  background: #e84118;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+

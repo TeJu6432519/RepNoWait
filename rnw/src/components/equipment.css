@@ -1,0 +1,436 @@
+/* ===============================
+Equipment Page – Unified Dashboard Style
+=============================== */
+.equipment-page {
+  padding: 2rem;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #0f0f23, #1a1a2e, #16213e);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.equipment-main-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 25px;
+  padding: 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+  width: 100%;
+  max-width: 1200px;
+  min-height: 500px;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1200px) {
+  .equipment-main-card {
+    width: calc(100% - 4rem);
+  }
+}
+
+.equipment-main-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px rgba(0, 212, 255, 0.15);
+}
+
+/* Page Title */
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Notification Box */
+.notification {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.15);
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.notification.success {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.notification.error {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* Muscle Tabs */
+.muscle-tabs {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+.muscle-tab {
+  flex: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.muscle-tab.active {
+  background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+  border-color: #00d4ff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  color: #fff;
+}
+
+/* Equipment Grid */
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.equipment-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.equipment-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+  transform: translateY(-5px);
+}
+
+.equipment-card.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+}
+
+/* Status Dot */
+.equipment-status {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+}
+
+.status-available { background: #4ecdc4; }
+.status-occupied { background: #ff6b6b; }
+.status-maintenance { background: #ffa500; }
+
+/* Hour & Slot Selection */
+.time-selection {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.hour-selection, .slot-selection {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.hour-btn, .slot-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hour-btn:hover, .slot-btn:hover {
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.hour-btn.selected, .slot-btn.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+.slot-btn.unavailable {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+/* Book Button */
+.book-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.book-btn:hover {
+  background: linear-gradient(135deg, #4ecdc4, #00d4ff);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover { background: #dc2626; }
+
+.done-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.done-btn:hover { background: #16a34a; }
+
+.equipment-card.done {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.3);
+}
+
+.equipment-card.done {
+  background: rgba(0, 255, 0, 0.2);
+  text-decoration: line-through;
+  opacity: 0.7;
+  transition: opacity 0.5s ease;
+}
+
+.book-btn {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.done-btn {
+  background: #28a745; /* green */
+}
+
+.done-btn:hover {
+  background: #1e7e34;
+}
+
+.cancel-btn {
+  background: #dc3545; /* red */
+}
+
+.cancel-btn:hover {
+  background: #a71d2a;
+}
+
+/* Cancel animation */
+.equipment-card.cancelling {
+  background-color: #ff3b3b; /* full red */
+  color: white;
+  animation: fadeOutRed 0.8s forwards;
+}
+
+@keyframes fadeOutRed {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.no-equipment {
+  background-color: #ffebcc; /* yellow for no-equipment exercises */
+}
+.alternate-equipment {
+  background-color: #d0f0fd; /* blue for alternate equipment */
+}
+
+.exercise-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.exercise-card {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  min-width: 150px;
+  text-align: center;
+  font-weight: 500;
+  color: #fff;
+}
+
+.equipment-available {
+  background: linear-gradient(135deg, #4caf50, #81c784); /* green = available */
+}
+
+.equipment-exercise {
+  background: linear-gradient(135deg, #f44336, #e57373); /* red = unavailable */
+}
+
+.bodyweight-exercise {
+  background: linear-gradient(135deg, #ff9800, #ffc107); /* orange = bodyweight */
+}
+.exercise-card {
+  padding: 1rem;
+  border-radius: 10px;
+  min-width: 180px;
+  text-align: center;
+  font-weight: 500;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.accept-btn {
+  background: #4caf50;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.reject-btn {
+  background: #f44336;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.accept-btn:disabled {
+  background: #a5d6a7;
+  cursor: not-allowed;
+}
+
+
+.equipment-main-card {
+  position: relative; /* needed for overlay inside it */
+}
+
+/* 1. The Full-Screen Overlay (Dark & Blurred) */
+.overlay-message {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  border-radius: 8px; 
+  background: rgba(0, 0, 0, 0.752);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 2. The Inner Content Box (Red Futuristic Glow) */
+.overlay-content-box {
+  padding: 1.5rem 2.5rem;
+  border-radius: 5px; 
+  text-align: center;
+  
+  /* Futuristic Styles */
+  color: #ff3333;
+  font-family: 'Share Tech Mono', monospace; 
+  font-size: 1.6rem; 
+  font-weight: bold;
+  text-shadow:0 0 10px rgba(255, 0, 0, 0.6); 
+  background: rgba(20, 0, 0, 0.973); 
+  border: 1px solid rgba(255, 0, 0, 0.5); 
+  box-shadow: 
+    0 0 15px rgba(255, 0, 0, 0.9), 
+    inset 0 0 8px rgba(255, 0, 0, 0.7);
+}
+
+
+/* Styles for equipment under maintenance */
+.equipment-card.under-maintenance {
+  background-color: #ffa500; /* Orange background */
+  opacity: 0.6; /* Slightly transparent */
+  pointer-events: none; /* Disable interactions */
+}
+
+/* Styles for selected equipment */
+.equipment-card.selected {
+  border: 2px solid #4ecdc4; /* Highlight border */
+}
+
+/* Styles for disabled equipment */
+.equipment-card.disabled {
+  background-color: #000000b5; /* Light gray background */
+  pointer-events: none; /* Disable interactions */
+}
+
+/* Status indicators */
+.equipment-status.status-available {
+  background-color: #4ecdc4; /* Teal */
+}
+
+.equipment-status.status-occupied {
+  background-color: #ff6b6b; /* Red */
+}
+
+.equipment-status.status-under-maintenance {
+  background-color: #ffa500; /* Orange */
+}
