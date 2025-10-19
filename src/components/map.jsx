@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "./map.css";
 
 const gymZones = [
@@ -14,100 +15,59 @@ const gymZones = [
   { name: "Calisthenics Area", x: 50, y: 410, width: 420, height: 80 },
 ];
 
-/**
- * Small synonym map: map common booking labels to zone names.
- * Extend this if you have other variant labels in bookings.
- */
-const SYNONYMS = {
-  "chest press machine": "Chest Press",
-  "treadmill": "Treadmills",
-  "treadmills": "Treadmills",
-  "stationary bike": "Stationary Bikes",
-  "stationary bikes": "Stationary Bikes",
-  "lat pulldown machine": "Lat Pulldown",
-  "leg press machine": "Leg Press",
-  "dumbbells": "Dumbbell Area",
-  "dumbbell area": "Dumbbell Area",
-  "squat rack": "Squat Rack",
-};
-
-/** return normalized zone name for a booking equipment string */
-const normalizeBookingToZone = (equipment) => {
-  if (!equipment) return "";
-  const be = equipment.toLowerCase().trim();
-  if (SYNONYMS[be]) return SYNONYMS[be];
-
-  // try to match by inclusion (flexible)
-  for (const zone of gymZones) {
-    const zn = zone.name.toLowerCase();
-    if (be.includes(zn) || zn.includes(be)) return zone.name;
-    // match base words (e.g., 'treadmill' vs 'treadmills')
-    if (be.replace(/s$/, "") === zn.replace(/s$/, "")) return zone.name;
-  }
-
-  // fallback: return original equipment (so it won't match any zone)
-  return equipment;
-};
-
-/** color: smooth gradient from yellow -> orange -> red */
+// Heatmap gradient yellow -> orange -> red
 const getHeatColor = (count, maxCount) => {
-  if (!count || maxCount === 0) return "rgba(255,255,255,0.06)"; // empty / faint
-  const ratio = Math.min(1, count / Math.max(1, maxCount)); // 0..1
-
-  // produce a gradient: 0 -> yellow (255,255,0), 0.5 -> orange (255,165,0), 1 -> red (255,0,0)
-  // We'll interpolate between these stops:
+  if (!count || maxCount === 0) return "rgba(255,255,255,0.06)";
+  const ratio = Math.min(1, count / Math.max(1, maxCount));
   const lerp = (a, b, t) => Math.round(a + (b - a) * t);
 
-  let r, g, b;
+  let r, g, bVal;
   if (ratio <= 0.5) {
-    // yellow -> orange
     const t = ratio / 0.5;
-    r = lerp(255, 255, t); // stays 255
+    r = lerp(255, 255, t);
     g = lerp(255, 165, t);
-    b = 0;
+    bVal = 0;
   } else {
-    // orange -> red
     const t = (ratio - 0.5) / 0.5;
-    r = lerp(255, 255, t); // stays 255
+    r = lerp(255, 255, t);
     g = lerp(165, 0, t);
-    b = 0;
+    bVal = 0;
   }
-
-  // ensure visible alpha
-  return `rgba(${r}, ${g}, ${b}, 0.92)`;
+  return `rgba(${r},${g},${bVal},0.92)`;
 };
 
-const Map = ({ bookings = [] }) => {
-  // build normalized bookings -> zone mapping and counts (memoized)
-  const zones = useMemo(() => {
-    // count map by zone name
-    const countMap = {};
-    for (const zone of gymZones) countMap[zone.name] = 0;
+const Map = () => {
+  const [zoneData, setZoneData] = useState([]);
 
-    bookings.forEach((b) => {
-      if (!b) return;
-      // only consider active (not done) bookings
-      if (b.done) return;
-      const mapped = normalizeBookingToZone(b.equipment);
-      if (countMap[mapped] !== undefined) countMap[mapped] += 1;
-      // else ignore (not a known zone)
-    });
+  // Fetch heatmap data from backend
+  useEffect(() => {
+    // map.jsx
+      const fetchHeatmapData = async () => {
+        try {
+          const res = await axios.get("http://localhost:5001/api/heatmap-data");
+          console.log("Heatmap API response:", res.data);
+          setZoneData(res.data);
+        } catch (err) {
+          console.error("Failed to fetch heatmap data:", err);
+        }
+      };
+    fetchHeatmapData();
+  }, []);  
 
-    // return an array with counts baked in
-    return gymZones.map((z) => ({ ...z, count: countMap[z.name] || 0 }));
-  }, [bookings]);
+  // Merge zoneData with gymZones layout
+  const zones = gymZones.map((zone) => {
+    const data = Array.isArray(zoneData) 
+                  ? zoneData.find(z => z.zone_name.toLowerCase() === zone.name.toLowerCase())
+                  : null;
+    return { ...zone, count: data ? data.count : 0 };
+  });
+  
 
-  const maxCount = Math.max(...zones.map((z) => z.count), 0);
-
-  // debug — open console to inspect counts if something still looks wrong
-  // (comment out in production)
-  // eslint-disable-next-line no-console
-  console.log("Map zones counts:", zones.map((z) => ({ name: z.name, count: z.count })), "max:", maxCount);
+  const maxCount = Math.max(...zones.map((z) => z.count), 1);
 
   return (
     <div className="map-page">
       <h2 className="map-title">Gym Layout Heatmap</h2>
-
 
       <svg width="550" height="520" className="gym-map" role="img" aria-label="Gym heatmap">
         {zones.map((z) => (
@@ -133,7 +93,6 @@ const Map = ({ bookings = [] }) => {
             >
               {z.name}
             </text>
-
             {z.count > 0 && (
               <text
                 x={z.x + z.width - 14}

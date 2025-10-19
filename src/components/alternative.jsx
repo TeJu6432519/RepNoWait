@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import "./equipment.css"; // reuse existing equipment styles
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./equipment.css";
 
 // Exercises per muscle group
 const exercisesData = {
@@ -29,36 +30,115 @@ const exercisesData = {
   },
 };
 
-const toMinutes = (hour, minute) => hour * 60 + minute;
+// Map equipment names to DB ids
+const EQUIPMENT_ID_MAP = {
+  "Chest Press Machine": 1,
+  "Incline Bench": 2,
+  "Lat Pulldown": 3,
+  "Seated Row": 4,
+  "Leg Press": 5,
+  "Squat Rack": 6,
+  "Bicep Curl Machine": 7,
+  "Tricep Pushdown": 8,
+  "Shoulder Press": 9,
+  "Lateral Raise Machine": 10,
+  "Treadmill": 11,
+  "Elliptical": 12,
+};
 
-const Alternative = ({ altWorkoutData, bookings, setBookings, setAltWorkoutData }) => {
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState(() => {
-    if (!altWorkoutData) return [];
+// Map hour/slot to time_slot_id in DB (example)
+const TIME_SLOT_ID_MAP = {
+  "6:0": 1,
+  "6:15": 2,
+  "6:30": 3,
+  "6:45": 4,
+  "7:0": 5,
+  "7:15": 6,
+  "7:30": 7,
+  "7:45": 8,
+  "8:0": 9,
+  "8:15": 10,
+  "8:30": 11,
+  "8:45": 12,
+  // add all your slots here...
+};
 
-    const { selectedGroup, selectedHour, selectedSlot } = altWorkoutData;
-    const groupExercises = exercisesData[selectedGroup] || { equipment: [], bodyweight: [] };
+const Alternative = ({ altWorkoutData }) => {
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    return groupExercises.equipment.map((eq) => ({
-      name: eq,
-      type: "equipment",
-      available: !bookings.some(
-        (b) =>
-          b.equipment === eq &&
-          !b.done &&
-          toMinutes(b.hour, b.minute) === toMinutes(selectedHour, selectedSlot)
-      ),
-    }));
-  });
+  useEffect(() => {
+    const fetchAvailable = async () => {
+      if (!altWorkoutData?.selectedGroup) return;
+      setLoading(true);
 
-  if (!altWorkoutData || !altWorkoutData.selectedGroup) {
+      const { selectedGroup, selectedHour, selectedSlot } = altWorkoutData;
+      const groupExercises = exercisesData[selectedGroup]?.equipment || [];
+
+      try {
+        // Fetch all current bookings
+        const res = await axios.get("http://localhost:5001/api/bookings");
+        const activeBookings = res.data;
+
+        const slotKey = `${selectedHour}:${selectedSlot}`;
+
+        // Map equipment to availability
+        const suggestions = groupExercises.map((eq) => {
+          const booked = activeBookings.some(
+            (b) =>
+              b.equipment_id === EQUIPMENT_ID_MAP[eq] &&
+              !b.done &&
+              b.time_slot_id === TIME_SLOT_ID_MAP[slotKey]
+          );
+          return {
+            name: eq,
+            type: "equipment",
+            available: !booked,
+          };
+        });
+
+        setEquipmentSuggestions(suggestions);
+      } catch (err) {
+        console.error("Failed to fetch bookings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAvailable();
+  }, [altWorkoutData]);
+
+  const handleAccept = async (eq) => {
+    if (!altWorkoutData) return;
+    const { selectedHour, selectedSlot, userId } = altWorkoutData;
+
+    const slotKey = `${selectedHour}:${selectedSlot}`;
+
+    try {
+      await axios.post("http://localhost:5001/api/bookings", {
+        equipment_id: EQUIPMENT_ID_MAP[eq.name],
+        time_slot_id: TIME_SLOT_ID_MAP[slotKey],
+        user_id: userId || 1,
+      });
+
+      setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
+      alert(`${eq.name} booked successfully!`);
+    } catch (err) {
+      console.error("Booking failed:", err);
+      alert("Failed to book equipment. It might be unavailable.");
+    }
+  };
+
+  const handleReject = (eq) => {
+    setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
+  };
+
+  if (!altWorkoutData?.selectedGroup) {
     return (
       <div className="equipment-page">
         <div className="equipment-main-card">
-          <h3 className="page-title">No Alternative Selected</h3>
-          <p>
-            Go to the Equipment tab, select an unavailable slot, and click "Generate
-            Alternative".
-          </p>
+          <h3>No Alternative Selected</h3>
+          <p>Select a time slot for an unavailable equipment to see alternatives.</p>
         </div>
       </div>
     );
@@ -67,29 +147,10 @@ const Alternative = ({ altWorkoutData, bookings, setBookings, setAltWorkoutData 
   const { selectedGroup, selectedHour, selectedSlot } = altWorkoutData;
   const groupExercises = exercisesData[selectedGroup] || { equipment: [], bodyweight: [] };
 
-  const handleAccept = (eq) => {
-    setBookings((prev) => [
-      ...prev,
-      {
-        id: Date.now() + Math.random(),
-        equipment: eq.name,
-        hour: selectedHour,
-        minute: selectedSlot,
-        done: false,
-      },
-    ]);
-    // Remove this suggestion from list
-    setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
-  };
-
-  const handleReject = (eq) => {
-    setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
-  };
-
   return (
     <div className="equipment-page">
       <div className="equipment-main-card">
-        <h2 className="page-title">Alternative Workout Plan</h2>
+        <h2>Alternative Workout Plan</h2>
         <p>
           Muscle Group: <strong>{selectedGroup}</strong>
         </p>
@@ -97,7 +158,9 @@ const Alternative = ({ altWorkoutData, bookings, setBookings, setAltWorkoutData 
           Time Slot: <strong>{selectedHour}:{selectedSlot.toString().padStart(2, "0")}</strong>
         </p>
 
-        {equipmentSuggestions.length > 0 && (
+        {loading && <p>Loading available equipment...</p>}
+
+        {!loading && equipmentSuggestions.length > 0 && (
           <>
             <h3>Equipment Suggestions:</h3>
             <div className="exercise-grid">
@@ -141,16 +204,8 @@ const Alternative = ({ altWorkoutData, bookings, setBookings, setAltWorkoutData 
             </div>
           </>
         )}
-
-        {equipmentSuggestions.length === 0 && groupExercises.bodyweight.length === 0 && (
-          <p>No alternatives available for this slot.</p>
-        )}
-
-        <p style={{ marginTop: "1rem", fontStyle: "italic" }}>
-          Accept a suggestion to book it for your selected slot.
-        </p>
       </div>
-    </div>
+    </div>  
   );
 };
 
