@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./equipment.css";
 
-// Exercises per muscle group
+// ✅ Your existing data
 const exercisesData = {
   Chest: {
     equipment: ["Chest Press Machine", "Incline Bench"],
@@ -30,7 +30,7 @@ const exercisesData = {
   },
 };
 
-// Map equipment names to DB ids
+// ✅ Equipment ID Map
 const EQUIPMENT_ID_MAP = {
   "Chest Press Machine": 1,
   "Incline Bench": 2,
@@ -46,7 +46,7 @@ const EQUIPMENT_ID_MAP = {
   "Elliptical": 12,
 };
 
-// Map hour/slot to time_slot_id in DB (example)
+// ✅ Time Slot Map
 const TIME_SLOT_ID_MAP = {
   "6:0": 1,
   "6:15": 2,
@@ -60,13 +60,20 @@ const TIME_SLOT_ID_MAP = {
   "8:15": 10,
   "8:30": 11,
   "8:45": 12,
-  // add all your slots here...
 };
 
-const Alternative = ({ altWorkoutData }) => {
+const Alternative = ({ altWorkoutData, bookings, setBookings }) => {
   const [equipmentSuggestions, setEquipmentSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ NEW: AI state
+  const [aiAlternatives, setAiAlternatives] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // ✅ Local bodyweight state (so we can remove accepted/rejected ones)
+  const [bodyweightExercises, setBodyweightExercises] = useState([]);
+
+  // ✅ Fetch available equipment
   useEffect(() => {
     const fetchAvailable = async () => {
       if (!altWorkoutData?.selectedGroup) return;
@@ -76,13 +83,10 @@ const Alternative = ({ altWorkoutData }) => {
       const groupExercises = exercisesData[selectedGroup]?.equipment || [];
 
       try {
-        // Fetch all current bookings
         const res = await axios.get("http://localhost:5001/api/bookings");
         const activeBookings = res.data;
-
         const slotKey = `${selectedHour}:${selectedSlot}`;
 
-        // Map equipment to availability
         const suggestions = groupExercises.map((eq) => {
           const booked = activeBookings.some(
             (b) =>
@@ -98,6 +102,9 @@ const Alternative = ({ altWorkoutData }) => {
         });
 
         setEquipmentSuggestions(suggestions);
+
+        // Also set local bodyweight list
+        setBodyweightExercises(exercisesData[selectedGroup]?.bodyweight || []);
       } catch (err) {
         console.error("Failed to fetch bookings:", err);
       } finally {
@@ -108,29 +115,111 @@ const Alternative = ({ altWorkoutData }) => {
     fetchAvailable();
   }, [altWorkoutData]);
 
-  const handleAccept = async (eq) => {
-    if (!altWorkoutData) return;
-    const { selectedHour, selectedSlot, userId } = altWorkoutData;
+  // ✅ NEW: Fetch Gemini AI alternatives
+  useEffect(() => {
+    const fetchAIAlternatives = async () => {
+      if (!altWorkoutData?.selectedGroup) return;
+      setAiLoading(true);
+      try {
+        const res = await axios.post("http://localhost:5001/api/gemini/alternatives", {
+          muscleGroup: altWorkoutData.selectedGroup,
+        });
+        setAiAlternatives(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch AI alternatives:", err);
+      } finally {
+        setAiLoading(false);
+      }
+    };
 
-    const slotKey = `${selectedHour}:${selectedSlot}`;
+    fetchAIAlternatives();
+  }, [altWorkoutData]);
 
-    try {
-      await axios.post("http://localhost:5001/api/bookings", {
-        equipment_id: EQUIPMENT_ID_MAP[eq.name],
-        time_slot_id: TIME_SLOT_ID_MAP[slotKey],
-        user_id: userId || 1,
-      });
+  // ✅ Accept handler (supports equipment + AI + static bodyweight)
+const handleAccept = async (eq, type = "equipment") => {
+  if (!altWorkoutData) {
+    alert("Missing workout data.");
+    return;
+  }
 
-      setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
-      alert(`${eq.name} booked successfully!`);
-    } catch (err) {
-      console.error("Booking failed:", err);
-      alert("Failed to book equipment. It might be unavailable.");
+  const { selectedHour, selectedSlot, userId } = altWorkoutData;
+  const slotKey = `${selectedHour}:${selectedSlot}`;
+  const timeSlotId = TIME_SLOT_ID_MAP[slotKey];
+
+  if (!timeSlotId) {
+    console.error("❌ Invalid time slot:", slotKey);
+    alert("Invalid time slot. Please select a valid slot.");
+    return;
+  }
+
+  // Choose correct API endpoint
+  const endpoint =
+    type === "bodyweight"
+      ? "http://localhost:5001/api/bodyweightBookings"
+      : "http://localhost:5001/api/bookings";
+
+  // Build request payload
+  const payload =
+    type === "bodyweight"
+      ? {
+          user_id: userId || 1,
+          time_slot_id: timeSlotId,
+          exercise_name: eq.name,
+        }
+      : {
+          equipment_id: EQUIPMENT_ID_MAP[eq.name],
+          time_slot_id: timeSlotId,
+          user_id: userId || 1,
+        };
+
+  console.log("📦 Sending booking:", { endpoint, payload, type });
+
+  try {
+    const res = await axios.post(endpoint, payload);
+      alert(`${eq.name} added to your dashboard!`);
+
+      // ✅ Update dashboard state instantly
+      setBookings((prev) => [
+        ...prev,
+        {
+          id: res.data?.id || Math.random(), // use backend ID if available
+          equipment_id:
+            type === "bodyweight" ? null : EQUIPMENT_ID_MAP[eq.name],
+          time_slot_id: timeSlotId,
+          exercise_name: type === "bodyweight" ? eq.name : null,
+          done: false,
+          date: new Date().toISOString().split("T")[0],
+        },
+      ]);
+
+
+    // Update UI lists
+    if (type === "equipment") {
+      setEquipmentSuggestions((prev) =>
+        prev.filter((e) => e.name !== eq.name)
+      );
+    } else if (type === "bodyweight") {
+      setBodyweightExercises((prev) =>
+        prev.filter((e) => e !== eq.name)
+      );
+    } else {
+      setAiAlternatives((prev) =>
+        prev.filter((e) => e.name !== eq.name)
+      );
     }
-  };
+  } catch (err) {
+    console.error("❌ Booking failed:", err.response?.data || err.message);
+    alert("Failed to book exercise. Try again.");
+  }
+};
 
-  const handleReject = (eq) => {
-    setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
+
+  const handleReject = (eq, type = "equipment") => {
+    if (type === "equipment")
+      setEquipmentSuggestions((prev) => prev.filter((e) => e.name !== eq.name));
+    else if (type === "bodyweight")
+      setBodyweightExercises((prev) => prev.filter((e) => e !== eq.name));
+    else setAiAlternatives((prev) => prev.filter((e) => e.name !== eq.name));
   };
 
   if (!altWorkoutData?.selectedGroup) {
@@ -145,7 +234,6 @@ const Alternative = ({ altWorkoutData }) => {
   }
 
   const { selectedGroup, selectedHour, selectedSlot } = altWorkoutData;
-  const groupExercises = exercisesData[selectedGroup] || { equipment: [], bodyweight: [] };
 
   return (
     <div className="equipment-page">
@@ -155,7 +243,10 @@ const Alternative = ({ altWorkoutData }) => {
           Muscle Group: <strong>{selectedGroup}</strong>
         </p>
         <p>
-          Time Slot: <strong>{selectedHour}:{selectedSlot.toString().padStart(2, "0")}</strong>
+          Time Slot:{" "}
+          <strong>
+            {selectedHour}:{selectedSlot.toString().padStart(2, "0")}
+          </strong>
         </p>
 
         {loading && <p>Loading available equipment...</p>}
@@ -167,45 +258,109 @@ const Alternative = ({ altWorkoutData }) => {
               {equipmentSuggestions.map((eq, idx) => (
                 <div
                   key={idx}
-                  className={`exercise-card ${eq.available ? "equipment-available" : "equipment-exercise"}`}
+                  className={`exercise-card ${
+                    eq.available ? "equipment-available" : "equipment-exercise"
+                  }`}
                 >
                   <strong>{eq.name}</strong>
                   <div style={{ marginTop: "0.5rem" }}>
                     <button
                       className="accept-btn"
                       disabled={!eq.available}
-                      onClick={() => handleAccept(eq)}
+                      onClick={() => handleAccept(eq, "equipment")}
                     >
                       Accept
                     </button>
                     <button
                       className="reject-btn"
-                      onClick={() => handleReject(eq)}
+                      onClick={() => handleReject(eq, "equipment")}
                     >
                       Reject
                     </button>
                   </div>
-                  {!eq.available && <small style={{ color: "#fff", opacity: 0.7 }}>Unavailable</small>}
+                  {!eq.available && (
+                    <small style={{ color: "#fff", opacity: 0.7 }}>Unavailable</small>
+                  )}
                 </div>
               ))}
             </div>
           </>
         )}
 
-        {groupExercises.bodyweight.length > 0 && (
+        {/* ✅ Static Bodyweight Exercises with Accept/Reject */}
+        {bodyweightExercises.length > 0 && (
           <>
             <h3 style={{ marginTop: "1rem" }}>Bodyweight / No-equipment Exercises:</h3>
             <div className="exercise-grid">
-              {groupExercises.bodyweight.map((bw, idx) => (
+              {bodyweightExercises.map((bw, idx) => (
                 <div key={idx} className="exercise-card bodyweight-exercise">
                   <strong>{bw}</strong>
+                  <div style={{ marginTop: "0.5rem" }}>
+                    <button
+                      className="accept-btn"
+                      onClick={() => handleAccept({ name: bw }, "bodyweight")}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="reject-btn"
+                      onClick={() => handleReject({ name: bw }, "bodyweight")}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ✅ AI ALTERNATIVES SECTION */}
+        {aiLoading && <p>Loading AI alternatives...</p>}
+        {!aiLoading && aiAlternatives.length > 0 && (
+          <>
+            <h3 style={{ marginTop: "1rem" }}>AI Suggested Alternatives:</h3>
+            <div className="exercise-grid">
+              {aiAlternatives.map((ex, idx) => (
+                <div key={idx} className="exercise-card bodyweight-exercise">
+                  <strong>{ex.name}</strong>
+                  <p style={{ fontSize: "0.85rem" }}>{ex.description}</p>
+                  {ex.youtubeLink && (
+                    <a
+                      href={ex.youtubeLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "block",
+                        color: "#00e0ff",
+                        marginBottom: "0.5rem",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      ▶ Watch Tutorial
+                    </a>
+                  )}
+                  <div>
+                    <button
+                      className="accept-btn"
+                      onClick={() => handleAccept(ex, "bodyweight")}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="reject-btn"
+                      onClick={() => handleReject(ex, "bodyweight")}
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </>
         )}
       </div>
-    </div>  
+    </div>
   );
 };
 

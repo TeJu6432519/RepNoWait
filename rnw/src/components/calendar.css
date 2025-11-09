@@ -851,3 +851,95 @@
 }
 
 
+
+/* Weekly Planner Card */
+.weekly-planner {
+  background: rgba(30, 30, 50, 0.8);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weekly-planner h3 {
+  font-size: 1.1rem;
+  color: #00d4ff;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Day cards */
+.weekday-select {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.weekday-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  user-select: none;
+  text-align: center;
+}
+
+.weekday-card:hover {
+  background: rgba(0, 212, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.weekday-card.selected {
+  background: linear-gradient(135deg, #00d4ff, #4ecdc4);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+}
+
+/* Muscle picker & apply button */
+.weekly-muscle {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.weekly-muscle select {
+  background: #1e1e2f;
+  border: 1px solid #3d3d5c;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.weekly-muscle select:hover {
+  border-color: #00d4ff;
+}
+
+.apply-week-btn {
+  background: #00d4ff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 212, 255, 0.4);
+}
+
+.apply-week-btn:hover {
+  background: #009be3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.5);
+}
+
+

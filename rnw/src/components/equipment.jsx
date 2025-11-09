@@ -263,7 +263,7 @@ const Equipment = ({ bookings, setBookings, setActiveView, setAltWorkoutData }) 
           {/* Time Selection */}
           {!allFull && selectedEquipment && (
             <div className="time-selection">
-              <h3>Select Hour & Slot</h3>
+              <h3>Select Hour & Slot</h3><br/>
 
               <div className="hour-selection">
                 {hours.map((h) => (
@@ -271,7 +271,7 @@ const Equipment = ({ bookings, setBookings, setActiveView, setAltWorkoutData }) 
                     {h}:00
                   </button>
                 ))}
-              </div>
+              </div><br/>
 
               {selectedHour !== null && (
                 <div className="slot-selection">
@@ -290,28 +290,16 @@ const Equipment = ({ bookings, setBookings, setActiveView, setAltWorkoutData }) 
                         {clashMessage && (
                           <button
                             className="generate-alt-btn"
-                            style={{
-                              position: "absolute",
-                              top: "100%",
-                              left: 0,
-                              background: "#ff9800",
-                              color: "#fff",
-                              border: "none",
-                              padding: "2px 6px",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              marginTop: "2px",
-                            }}
                             onClick={() => handleGenerateAlternative(selectedGroup, selectedHour, s)}
                           >
-                            Generate Alternative
+                            ⚡
                           </button>
                         )}
                       </div>
                     );
                   })}
                 </div>
-              )}
+              )}<br/>
 
               <button className="book-btn" onClick={handleBook}>
                 Book Now

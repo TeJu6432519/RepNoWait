@@ -19,7 +19,7 @@ const Booking = ({ bookings, setBookings, userId }) => {
           axios.get(`http://localhost:5001/api/equipment/${g.id}`)
         );
         const eqResults = await Promise.all(eqPromises);
-        setEquipments(eqResults.flatMap(res => res.data));
+        setEquipments(eqResults.flatMap((res) => res.data));
 
         const tsRes = await axios.get("http://localhost:5001/api/time-slots");
         setTimeSlots(tsRes.data || []);
@@ -37,15 +37,22 @@ const Booking = ({ bookings, setBookings, userId }) => {
     fetchData();
   }, [setBookings, userId]);
 
-  if (loading) return <div className="equipment-page"><p>Loading bookings...</p></div>;
-  if (!bookings || bookings.length === 0) return (
-    <div className="equipment-page">
-      <div className="equipment-main-card">
-        <h1 className="page-title">My Bookings</h1>
-        <p style={{ padding: "1rem" }}>No bookings yet.</p>
+  if (loading)
+    return (
+      <div className="equipment-page">
+        <p>Loading bookings...</p>
       </div>
-    </div>
-  );
+    );
+
+  if (!bookings || bookings.length === 0)
+    return (
+      <div className="equipment-page">
+        <div className="equipment-main-card">
+          <h1 className="page-title">My Bookings</h1>
+          <p style={{ padding: "1rem" }}>No bookings yet.</p>
+        </div>
+      </div>
+    );
 
   // ---------------- Helper maps ----------------
   const equipmentMap = equipments.reduce((acc, eq) => {
@@ -58,7 +65,7 @@ const Booking = ({ bookings, setBookings, userId }) => {
     return acc;
   }, {});
 
-  // ---------------- Add relative ID for display only ----------------
+  // ---------------- Sort and label bookings ----------------
   const bookingsWithRelId = [...bookings]
     .sort((a, b) => {
       const aTime = timeSlotMap[a.time_slot_id]?.slot_start || "00:00";
@@ -72,9 +79,9 @@ const Booking = ({ bookings, setBookings, userId }) => {
     setProcessingId(id);
     try {
       await axios.put(`http://localhost:5001/api/bookings/${id}`, { done: true });
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, done: true } : b));
-      // Optional: remove after a delay
-      setTimeout(() => setBookings(prev => prev.filter(b => b.id !== id)), 2000);
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, done: true } : b)));
+      // Optional: remove after delay
+      setTimeout(() => setBookings((prev) => prev.filter((b) => b.id !== id)), 2000);
     } catch (err) {
       console.error("Done error:", err);
     } finally {
@@ -87,8 +94,8 @@ const Booking = ({ bookings, setBookings, userId }) => {
     setProcessingId(id);
     try {
       await axios.delete(`http://localhost:5001/api/bookings/${id}`);
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, cancelling: true } : b));
-      setTimeout(() => setBookings(prev => prev.filter(b => b.id !== id)), 800);
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, cancelling: true } : b)));
+      setTimeout(() => setBookings((prev) => prev.filter((b) => b.id !== id)), 800);
     } catch (err) {
       console.error("Cancel error:", err);
     } finally {
@@ -99,7 +106,10 @@ const Booking = ({ bookings, setBookings, userId }) => {
   const getSlotEnd = (slotStart) => {
     const [h, m] = slotStart.split(":").map(Number);
     const end = new Date(1970, 0, 1, h, m + 15);
-    return `${end.getHours().toString().padStart(2,"0")}:${end.getMinutes().toString().padStart(2,"0")}`;
+    return `${end.getHours().toString().padStart(2, "0")}:${end
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   return (
@@ -108,19 +118,39 @@ const Booking = ({ bookings, setBookings, userId }) => {
         <h1 className="page-title">My Bookings</h1>
 
         <div className="equipment-grid">
-          {bookingsWithRelId.map(b => {
+          {bookingsWithRelId.map((b) => {
             const eq = equipmentMap[b.equipment_id];
             const slot = timeSlotMap[b.time_slot_id];
             const start = slot?.slot_start || "00:00";
             const end = slot?.slot_end || getSlotEnd(start);
 
+            // Detect bodyweight / AI exercises (no equipment_id)
+            const isBodyweight = !b.equipment_id && b.exercise_name;
+
             return (
               <div
                 key={b.id}
-                className={`equipment-card ${b.done ? "done" : ""} ${b.cancelling ? "cancelling" : ""}`}
+                className={`equipment-card ${b.done ? "done" : ""} ${
+                  b.cancelling ? "cancelling" : ""
+                }`}
+                style={{
+                  backgroundColor: isBodyweight
+                    ? "rgba(0, 224, 255, 0.12)"
+                    : "rgba(255, 255, 255, 0.05)",
+                  border: isBodyweight
+                    ? "1px solid #00e0ff"
+                    : "1px solid rgba(255,255,255,0.1)",
+                }}
               >
-                <h3>{b.relId}. {eq?.name || `Equipment #${b.equipment_id}`}</h3>
+                <h3 style={{ color: isBodyweight ? "#00e0ff" : "#fff" }}>
+                  {b.relId}.{" "}
+                  {isBodyweight
+                    ? `🧍‍♂️ ${b.exercise_name}`
+                    : eq?.name || `Equipment #${b.equipment_id}`}
+                </h3>
+
                 <p>Time: {start} - {end}</p>
+
                 <div style={{ marginTop: "0.5rem" }}>
                   {!b.done && (
                     <button

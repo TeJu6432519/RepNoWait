@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Activity,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Zap,
+  CheckCircle,
+  XCircle,
+  UserPlus,
+  LogIn,
+  Chrome
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/logo.png";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup
+} from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebaseConfig';
 
+// --- Custom CSS (same as before) ---
+const customCss = 
 
-// --- Custom CSS Definition ---
-const customCss = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 :root {
   --bg-color: #0f0f1a;
@@ -33,7 +52,7 @@ body {
 }
 
 /* ==============================
-   CONTAINER LAYOUT
+  CONTAINER LAYOUT
 ============================== */
 .login-container {
   display: flex;
@@ -82,7 +101,7 @@ body {
 
 
 /* ==============================
-   LEFT SIDE (LOGO)
+  LEFT SIDE (LOGO)
 ============================== */
 .pulse-circle {
   position: absolute;
@@ -151,7 +170,7 @@ body {
 }
 
 /* ==============================
-   RIGHT SIDE (LOGIN CARD)
+  RIGHT SIDE (LOGIN CARD)
 ============================== */
 .login-card {
   width: 100%;
@@ -180,7 +199,7 @@ body {
 }
 
 /* ==============================
-   FORM ELEMENTS
+  FORM ELEMENTS
 ============================== */
 .input-group {
   margin-bottom: 1.5rem;
@@ -253,7 +272,7 @@ body {
 
 
 /* ==============================
-   FOOTER TEXT
+  FOOTER TEXT
 ============================== */
 .switch-mode {
   text-align: center;
@@ -269,7 +288,7 @@ body {
 }
 
 /* ==============================
-   NOTIFICATIONS
+  NOTIFICATIONS
 ============================== */
 .error-msg, .success-msg {
   text-align: center;
@@ -317,12 +336,13 @@ body {
   to { opacity: 1; transform: translateX(0); }
 }
 
-
 `;
+;
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginType, setLoginType] = useState('admin');
+  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -331,27 +351,64 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     if (!email || !password) {
       setError('Please fill in all fields.');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setError('');
+    try {
+      let userCredential;
+      if (isSignup) {
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
+
+      const user = userCredential.user;
       setNotification({
-        message: `Welcome ${loginType === 'admin' ? 'Admin' : 'Member'}! Signed in successfully.`,
-        type: 'success'
+        message: `${isSignup ? 'Account created' : 'Welcome back'}, ${loginType === 'admin' ? 'Admin' : 'Member'}!`,
+        type: 'success',
       });
+
       setEmail('');
       setPassword('');
       setTimeout(() => navigate('/dashboard'), 1200);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      let msg = err.message;
+      if (msg.includes('auth/invalid-email')) msg = 'Invalid email address.';
+      if (msg.includes('auth/missing-password')) msg = 'Please enter a password.';
+      if (msg.includes('auth/email-already-in-use')) msg = 'This email is already registered.';
+      if (msg.includes('auth/invalid-credential')) msg = 'Invalid credentials. Please try again.';
+      if (msg.includes('auth/too-many-requests')) msg = 'Too many attempts. Try again later.';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+      setNotification({
+        message: 'Signed in with Google successfully!',
+        type: 'success'
+      });
+      setTimeout(() => navigate('/dashboard'), 1200);
+    } catch (err) {
+      console.error(err);
+      setError('Google sign-in failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -363,7 +420,7 @@ function Login() {
           <div className="pulse-circle"></div>
           <div className="logo-container">
             <div className="logo">
-            <img src={logo} alt="RepNoWait Logo" className="logo-img" />
+              <img src={logo} alt="RepNoWait Logo" className="logo-img" />
             </div>
             <h1 className="brand-title">
               Rep<span className="highlight-now">NoW</span>ait
@@ -373,14 +430,11 @@ function Login() {
         </div>
 
         {/* RIGHT PANEL */}
-          <div className="right-panel">
+        <div className="right-panel">
           <div className="login-card">
             {notification && (
               <>
-                {/* Overlay behind notification */}
                 <div className="notification-overlay"></div>
-
-                {/* Notification popup */}
                 <div className="notification">
                   {notification.type === 'success' ? (
                     <CheckCircle color="var(--success)" />
@@ -393,10 +447,14 @@ function Login() {
             )}
 
             <h2 className="login-title">
-              {loginType === 'admin' ? 'Admin Sign In' : 'Member Login'}
+              {isSignup
+                ? 'Create Your Account'
+                : loginType === 'admin'
+                ? 'Admin Sign In'
+                : 'Member Login'}
             </h2>
 
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleAuth}>
               <div className="input-group">
                 <label className="input-label">Email</label>
                 <div className="input-wrapper">
@@ -435,24 +493,57 @@ function Login() {
               <button className="login-btn" type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Zap className="animate-spin" /> Signing In...
+                    <Zap className="animate-spin" /> {isSignup ? 'Creating...' : 'Signing In...'}
                   </>
                 ) : (
                   <>
-                    Sign In <ArrowRight size={18} />
+                    {isSignup ? 'Sign Up' : 'Sign In'} <ArrowRight size={18} />
                   </>
                 )}
               </button>
             </form>
 
+            <button
+              className="login-btn"
+              style={{ marginTop: '1rem', background: '#4285F4' }}
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+            >
+              <Chrome size={18} /> Continue with Google
+            </button>
+
             <div className="switch-mode">
-              {loginType === 'admin' ? (
+              {isSignup ? (
                 <>
-                  Not an admin? <span onClick={() => setLoginType('member')}>Login as Member</span>
+                  Already have an account?{' '}
+                  <span onClick={() => setIsSignup(false)}>
+                    Sign In
+                  </span>
                 </>
               ) : (
                 <>
-                  Admin access? <span onClick={() => setLoginType('admin')}>Sign in here</span>
+                  Don’t have an account?{' '}
+                  <span onClick={() => setIsSignup(true)}>
+                    Sign Up
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="switch-mode">
+              {loginType === 'admin' ? (
+                <>
+                  Not an admin?{' '}
+                  <span onClick={() => setLoginType('member')}>
+                    Login as Member
+                  </span>
+                </>
+              ) : (
+                <>
+                  Admin access?{' '}
+                  <span onClick={() => setLoginType('admin')}>
+                    Sign in here
+                  </span>
                 </>
               )}
             </div>
